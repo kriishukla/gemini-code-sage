@@ -3,10 +3,8 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Send, Bot, User, Lightbulb } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { SpeechToText } from './SpeechToText';
 
 interface Message {
   id: string;
@@ -47,10 +45,6 @@ export const InterviewerChat = ({
     }
   };
 
-  const handleSpeechTranscript = (transcript: string) => {
-    setNewMessage(prev => prev + ' ' + transcript);
-  };
-
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
@@ -80,8 +74,7 @@ export const InterviewerChat = ({
       </div>
 
       {/* Messages */}
-      <ScrollArea className="flex-1 p-4">
-        <div className="space-y-4">
+      <div className="flex-1 overflow-y-auto p-4 space-y-4">
         <AnimatePresence>
           {messages.map((message) => (
             <motion.div
@@ -181,9 +174,8 @@ export const InterviewerChat = ({
           </motion.div>
         )}
 
-          <div ref={messagesEndRef} />
-        </div>
-      </ScrollArea>
+        <div ref={messagesEndRef} />
+      </div>
 
       {/* Input */}
       <div className="p-4 border-t border-border/50">
@@ -194,10 +186,6 @@ export const InterviewerChat = ({
             onKeyPress={handleKeyPress}
             placeholder="Ask questions, explain your approach, or request hints..."
             className="flex-1"
-            disabled={isThinking}
-          />
-          <SpeechToText
-            onTranscript={handleSpeechTranscript}
             disabled={isThinking}
           />
           <Button
