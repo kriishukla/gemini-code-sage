@@ -1,5 +1,4 @@
 import { useState, useRef, useEffect } from 'react';
-import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -77,155 +76,153 @@ export const InterviewerChat = ({
   };
 
   return (
-    <div className="flex flex-col h-full max-h-full">
-      <Card className="flex flex-col h-full bg-gradient-to-br from-card to-card/80 border-border/50">
-        {/* Header */}
-        <div className="flex-shrink-0 flex items-center gap-3 p-4 border-b border-border/50 bg-card">
-          <div className="flex items-center gap-2">
-            <div className="p-2 rounded-full bg-gradient-to-r from-primary to-primary/80">
-              <Bot className="w-4 h-4 text-primary-foreground" />
-            </div>
-            <div>
-              <h3 className="font-semibold text-foreground">CodeSage AI</h3>
-              <p className="text-xs text-muted-foreground">Technical Interviewer</p>
-            </div>
+    <div className="flex flex-col h-full bg-gradient-to-br from-card to-card/80 border border-border/50 rounded-lg">
+      {/* Header */}
+      <div className="flex-shrink-0 flex items-center gap-3 p-4 border-b border-border/50 bg-card/50">
+        <div className="flex items-center gap-2">
+          <div className="p-2 rounded-full bg-gradient-to-r from-primary to-primary/80">
+            <Bot className="w-4 h-4 text-primary-foreground" />
           </div>
-          
-          <div className="ml-auto">
-            <Badge variant="outline" className="text-xs">
-              {isThinking ? 'Thinking...' : 'Ready'}
-            </Badge>
+          <div>
+            <h3 className="font-semibold text-foreground">CodeSage AI</h3>
+            <p className="text-xs text-muted-foreground">Technical Interviewer</p>
           </div>
         </div>
+        
+        <div className="ml-auto">
+          <Badge variant="outline" className="text-xs">
+            {isThinking ? 'Thinking...' : 'Ready'}
+          </Badge>
+        </div>
+      </div>
 
-        {/* Messages Container - This is the key change */}
-        <div className="flex-1 min-h-0 relative">
-          <div className="absolute inset-0 overflow-y-auto overflow-x-hidden p-4 space-y-4">
-        <AnimatePresence>
-          {messages.map((message) => (
-            <motion.div
-              key={message.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              className={`flex gap-3 ${
-                message.role === 'user' ? 'flex-row-reverse' : 'flex-row'
-              }`}
-            >
-              <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
-                message.role === 'user' 
-                  ? 'bg-secondary' 
-                  : 'bg-gradient-to-r from-primary to-primary/80'
-              }`}>
-                {message.role === 'user' ? (
-                  <User className="w-4 h-4 text-secondary-foreground" />
-                ) : (
-                  <Bot className="w-4 h-4 text-primary-foreground" />
-                )}
-              </div>
-              
-              <div className={`flex-1 max-w-[80%] ${
-                message.role === 'user' ? 'text-right' : 'text-left'
-              }`}>
-                <div className={`inline-block p-3 rounded-lg ${
-                  message.role === 'user'
-                    ? 'bg-secondary text-secondary-foreground'
-                    : 'bg-muted text-muted-foreground'
+      {/* Messages Container with Independent Scrolling */}
+      <div className="flex-1 min-h-0 overflow-hidden">
+        <div className="h-full overflow-y-auto overflow-x-hidden p-4 space-y-4 scrollbar-thin smooth-scroll">
+          <AnimatePresence>
+            {messages.map((message) => (
+              <motion.div
+                key={message.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                className={`flex gap-3 ${
+                  message.role === 'user' ? 'flex-row-reverse' : 'flex-row'
+                }`}
+              >
+                <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
+                  message.role === 'user' 
+                    ? 'bg-secondary' 
+                    : 'bg-gradient-to-r from-primary to-primary/80'
                 }`}>
-                  {message.type === 'hint' && (
-                    <div className="flex items-center gap-2 mb-2 text-status-hint">
-                      <Lightbulb className="w-4 h-4" />
-                      <span className="text-xs font-medium">Hint</span>
-                    </div>
+                  {message.role === 'user' ? (
+                    <User className="w-4 h-4 text-secondary-foreground" />
+                  ) : (
+                    <Bot className="w-4 h-4 text-primary-foreground" />
                   )}
-                  <p className="text-sm whitespace-pre-wrap break-words">{message.content}</p>
                 </div>
-                <p className="text-xs text-muted-foreground mt-1">
-                  {message.timestamp.toLocaleTimeString()}
-                </p>
+                
+                <div className={`flex-1 max-w-[80%] ${
+                  message.role === 'user' ? 'text-right' : 'text-left'
+                }`}>
+                  <div className={`inline-block p-3 rounded-lg ${
+                    message.role === 'user'
+                      ? 'bg-secondary text-secondary-foreground'
+                      : 'bg-muted text-muted-foreground'
+                  }`}>
+                    {message.type === 'hint' && (
+                      <div className="flex items-center gap-2 mb-2 text-status-hint">
+                        <Lightbulb className="w-4 h-4" />
+                        <span className="text-xs font-medium">Hint</span>
+                      </div>
+                    )}
+                    <p className="text-sm whitespace-pre-wrap break-words">{message.content}</p>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {message.timestamp.toLocaleTimeString()}
+                  </p>
+                </div>
+              </motion.div>
+            ))}
+          </AnimatePresence>
+
+          {/* Thinking Indicator */}
+          {isThinking && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="flex gap-3"
+            >
+              <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-r from-primary to-primary/80 flex items-center justify-center">
+                <Bot className="w-4 h-4 text-primary-foreground" />
+              </div>
+              <div className="flex-1">
+                <div className="inline-block p-3 rounded-lg bg-muted">
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <div className="flex gap-1">
+                      <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                      <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                      <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                    </div>
+                    <span className="text-sm">CodeSage is thinking...</span>
+                  </div>
+                </div>
               </div>
             </motion.div>
-          ))}
-        </AnimatePresence>
+          )}
 
-        {/* Thinking Indicator */}
-        {isThinking && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="flex gap-3"
-          >
-            <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-r from-primary to-primary/80 flex items-center justify-center">
-              <Bot className="w-4 h-4 text-primary-foreground" />
-            </div>
-            <div className="flex-1">
-              <div className="inline-block p-3 rounded-lg bg-muted">
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <div className="flex gap-1">
-                    <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                    <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                    <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
-                  </div>
-                  <span className="text-sm">CodeSage is thinking...</span>
-                </div>
-              </div>
-            </div>
-          </motion.div>
-        )}
-
-        {/* Quick Hints */}
-        {currentHints.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="border-t border-border/50 pt-4"
-          >
-            <div className="flex items-center gap-2 mb-3">
-              <Lightbulb className="w-4 h-4 text-status-hint" />
-              <span className="text-sm font-medium text-status-hint">Available Hints</span>
-            </div>
-            <div className="space-y-2">
-              {currentHints.map((hint, index) => (
-                <Button
-                  key={index}
-                  variant="outline"
-                  size="sm"
-                  onClick={() => onSendMessage(`Can you give me a hint about: ${hint}`)}
-                  className="text-left justify-start h-auto p-3 text-sm text-muted-foreground hover:text-foreground"
-                >
-                  💡 {hint}
-                </Button>
-              ))}
-            </div>
-          </motion.div>
-        )}
-
-            <div ref={messagesEndRef} />
-          </div>
-        </div>
-
-        {/* Input */}
-        <div className="flex-shrink-0 p-4 border-t border-border/50 bg-card">
-          <div className="flex gap-2">
-            <Input
-              value={newMessage}
-              onChange={(e) => setNewMessage(e.target.value)}
-              onKeyPress={handleKeyPress}
-              placeholder="Ask questions, explain your approach, or request hints..."
-              className="flex-1"
-              disabled={isThinking}
-            />
-            <Button
-              onClick={handleSend}
-              disabled={!newMessage.trim() || isThinking}
-              size="sm"
-              className="bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70"
+          {/* Quick Hints */}
+          {currentHints.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="border-t border-border/50 pt-4"
             >
-              <Send className="w-4 h-4" />
-            </Button>
-          </div>
+              <div className="flex items-center gap-2 mb-3">
+                <Lightbulb className="w-4 h-4 text-status-hint" />
+                <span className="text-sm font-medium text-status-hint">Available Hints</span>
+              </div>
+              <div className="space-y-2">
+                {currentHints.map((hint, index) => (
+                  <Button
+                    key={index}
+                    variant="outline"
+                    size="sm"
+                    onClick={() => onSendMessage(`Can you give me a hint about: ${hint}`)}
+                    className="text-left justify-start h-auto p-3 text-sm text-muted-foreground hover:text-foreground w-full"
+                  >
+                    💡 {hint}
+                  </Button>
+                ))}
+              </div>
+            </motion.div>
+          )}
+
+          <div ref={messagesEndRef} />
         </div>
-      </Card>
+      </div>
+
+      {/* Input */}
+      <div className="flex-shrink-0 p-4 border-t border-border/50 bg-card/50">
+        <div className="flex gap-2">
+          <Input
+            value={newMessage}
+            onChange={(e) => setNewMessage(e.target.value)}
+            onKeyPress={handleKeyPress}
+            placeholder="Ask questions, explain your approach, or request hints..."
+            className="flex-1"
+            disabled={isThinking}
+          />
+          <Button
+            onClick={handleSend}
+            disabled={!newMessage.trim() || isThinking}
+            size="sm"
+            className="bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70"
+          >
+            <Send className="w-4 h-4" />
+          </Button>
+        </div>
+      </div>
     </div>
   );
 };

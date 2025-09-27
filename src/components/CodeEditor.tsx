@@ -1,24 +1,17 @@
 import { Editor } from '@monaco-editor/react';
-import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Play, RotateCcw } from 'lucide-react';
-import { motion } from 'framer-motion';
-import { useRef, useEffect } from 'react';
+import { Play, RotateCcw, CheckCircle } from 'lucide-react';
 
 interface CodeEditorProps {
   code: string;
   onChange: (value: string) => void;
   onRun: () => void;
   onReset: () => void;
+  onSubmit?: () => void;
   language: string;
-  analysis?: {
-    complexity: string;
-    quality: string;
-    suggestions: string[];
-    errors: string[];
-  };
   isRunning?: boolean;
+  canSubmit?: boolean;
 }
 
 export const CodeEditor = ({ 
@@ -26,27 +19,15 @@ export const CodeEditor = ({
   onChange, 
   onRun, 
   onReset, 
+  onSubmit,
   language, 
-  analysis, 
-  isRunning = false 
+  isRunning = false,
+  canSubmit = false
 }: CodeEditorProps) => {
-  const analysisRef = useRef<HTMLDivElement>(null);
-
-  // Auto-scroll to analysis panel when analysis results appear
-  useEffect(() => {
-    if (analysis && analysisRef.current) {
-      setTimeout(() => {
-        analysisRef.current?.scrollIntoView({ 
-          behavior: 'smooth',
-          block: 'start'
-        });
-      }, 300);
-    }
-  }, [analysis]);
   return (
-    <Card className="flex flex-col h-full bg-gradient-to-br from-card to-card/80 border-border/50">
+    <div className="flex flex-col h-full bg-gradient-to-br from-card to-card/80 border border-border/50 rounded-lg">
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-border/50">
+      <div className="flex items-center justify-between p-4 border-b border-border/50 flex-shrink-0">
         <div className="flex items-center gap-3">
           <h3 className="font-semibold text-foreground">Code Editor</h3>
           <Badge variant="secondary" className="text-xs">
@@ -72,80 +53,54 @@ export const CodeEditor = ({
             <Play className="w-4 h-4 mr-2" />
             {isRunning ? 'Running...' : 'Run Code'}
           </Button>
+          {onSubmit && (
+            <Button
+              onClick={onSubmit}
+              disabled={!canSubmit}
+              variant="outline"
+              size="sm"
+              className={`${
+                canSubmit 
+                  ? 'border-green-500 text-green-600 hover:bg-green-50 hover:text-green-700' 
+                  : 'border-muted text-muted-foreground cursor-not-allowed'
+              }`}
+              title={canSubmit ? 'Submit current problem' : 'Run code first to enable submit'}
+            >
+              <CheckCircle className="w-4 h-4 mr-2" />
+              Submit
+            </Button>
+          )}
         </div>
       </div>
 
-      {/* Editor */}
-      <div className="flex-1 relative">
-        <Editor
-          height="100%"
-          language={language}
-          value={code}
-          onChange={(value) => onChange(value || '')}
-          theme="vs-dark"
-          options={{
-            minimap: { enabled: false },
-            fontSize: 14,
-            lineNumbers: 'on',
-            scrollBeyondLastLine: false,
-            automaticLayout: true,
-            tabSize: 2,
-            wordWrap: 'on',
-            selectionHighlight: false,
-            bracketPairColorization: { enabled: true },
-          }}
-        />
+      {/* Scrollable Content Container */}
+      <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
+        {/* Editor */}
+        <div className="flex-1 relative">
+          <Editor
+            height="100%"
+            language={language}
+            value={code}
+            onChange={(value) => onChange(value || '')}
+            theme="vs-dark"
+            options={{
+              minimap: { enabled: false },
+              fontSize: 14,
+              lineNumbers: 'on',
+              scrollBeyondLastLine: false,
+              automaticLayout: true,
+              tabSize: 2,
+              wordWrap: 'on',
+              selectionHighlight: false,
+              bracketPairColorization: { enabled: true },
+              scrollbar: {
+                vertical: 'visible',
+                horizontal: 'visible'
+              }
+            }}
+          />
+        </div>
       </div>
-
-      {/* Analysis Panel */}
-      {analysis && (
-        <motion.div
-          ref={analysisRef}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="border-t border-border/50 p-4 bg-muted/30"
-        >
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <h4 className="text-sm font-medium text-foreground mb-2">Complexity</h4>
-              <p className="text-sm text-muted-foreground">{analysis.complexity}</p>
-            </div>
-            
-            <div>
-              <h4 className="text-sm font-medium text-foreground mb-2">Quality</h4>
-              <p className="text-sm text-muted-foreground">{analysis.quality}</p>
-            </div>
-          </div>
-
-          {analysis.errors.length > 0 && (
-            <div className="mt-3">
-              <h4 className="text-sm font-medium text-status-error mb-2">Issues Found</h4>
-              <ul className="text-sm text-status-error space-y-1">
-                {analysis.errors.map((error, index) => (
-                  <li key={index} className="flex items-start gap-2">
-                    <span className="text-status-error">•</span>
-                    {error}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-
-          {analysis.suggestions.length > 0 && (
-            <div className="mt-3">
-              <h4 className="text-sm font-medium text-status-hint mb-2">Suggestions</h4>
-              <ul className="text-sm text-muted-foreground space-y-1">
-                {analysis.suggestions.map((suggestion, index) => (
-                  <li key={index} className="flex items-start gap-2">
-                    <span className="text-status-hint">→</span>
-                    {suggestion}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-        </motion.div>
-      )}
-    </Card>
+    </div>
   );
 };

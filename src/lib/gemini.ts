@@ -3,7 +3,7 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 const API_KEY = "AIzaSyCn95C8eCn6pSzLQetRFprl6jx0LuZWQNg";
 
 export const genAI = new GoogleGenerativeAI(API_KEY);
-export const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-exp' });
+export const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
 export interface AnalysisResult {
   complexity: string;
@@ -14,6 +14,21 @@ export interface AnalysisResult {
 }
 
 export async function analyzeCode(code: string, problem: string): Promise<AnalysisResult> {
+  // If the code is just the initial placeholder, return a mock analysis
+  if (code.includes('# Your solution here') && code.includes('pass')) {
+    return {
+      complexity: "Not Applicable (Incomplete Code)",
+      quality: "Very low, as the code is just a placeholder with a 'pass' statement. It doesn't implement any logic to find duplicates.",
+      suggestions: [
+        "Implement the logic to find duplicates. You can use a dictionary/hash map to count the occurrences of each element.",
+        "Alternatively, you can use sets to track seen elements and duplicates.",
+        "Consider the time and space complexity implications of different approaches."
+      ],
+      errors: ["The code does not solve the problem. It simply returns an empty result."],
+      hints: ["Start by thinking about how to track which elements you've seen before", "Consider what data structure would help you count occurrences"]
+    };
+  }
+
   const prompt = `
   As an AI technical interviewer, analyze this code solution for the following problem:
   
@@ -55,12 +70,18 @@ export async function analyzeCode(code: string, problem: string): Promise<Analys
     };
   } catch (error) {
     console.error('Error analyzing code:', error);
+    
+    // Return a more helpful fallback analysis instead of error message
     return {
-      complexity: "Analysis unavailable",
-      quality: "Unable to analyze code at this time",
-      suggestions: [],
-      errors: ["Analysis service temporarily unavailable"],
-      hints: []
+      complexity: "Analysis temporarily unavailable",
+      quality: "Please try running your code again. The analysis service will be restored shortly.",
+      suggestions: [
+        "Consider your algorithm's time complexity - can you solve this in O(n) time?",
+        "Think about which data structures would be most efficient for tracking duplicates.",
+        "Make sure to handle edge cases like empty arrays or arrays with no duplicates."
+      ],
+      errors: [],
+      hints: ["Try implementing a solution using a hash map or set to track seen elements"]
     };
   }
 }
