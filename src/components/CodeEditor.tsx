@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Play, RotateCcw } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useRef, useEffect } from 'react';
 
 interface CodeEditorProps {
   code: string;
@@ -29,6 +30,19 @@ export const CodeEditor = ({
   analysis, 
   isRunning = false 
 }: CodeEditorProps) => {
+  const analysisRef = useRef<HTMLDivElement>(null);
+
+  // Auto-scroll to analysis panel when analysis results appear
+  useEffect(() => {
+    if (analysis && analysisRef.current) {
+      setTimeout(() => {
+        analysisRef.current?.scrollIntoView({ 
+          behavior: 'smooth',
+          block: 'start'
+        });
+      }, 300);
+    }
+  }, [analysis]);
   return (
     <Card className="flex flex-col h-full bg-gradient-to-br from-card to-card/80 border-border/50">
       {/* Header */}
@@ -86,6 +100,7 @@ export const CodeEditor = ({
       {/* Analysis Panel */}
       {analysis && (
         <motion.div
+          ref={analysisRef}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="border-t border-border/50 p-4 bg-muted/30"

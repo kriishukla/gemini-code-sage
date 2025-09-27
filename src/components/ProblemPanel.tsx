@@ -3,6 +3,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Clock, Target, Code, CheckCircle, XCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useRef, useEffect } from 'react';
 
 interface Problem {
   id: string;
@@ -35,6 +36,8 @@ interface ProblemPanelProps {
 }
 
 export const ProblemPanel = ({ problem, timeElapsed = 0, testResults }: ProblemPanelProps) => {
+  const testResultsRef = useRef<HTMLDivElement>(null);
+
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
@@ -49,6 +52,18 @@ export const ProblemPanel = ({ problem, timeElapsed = 0, testResults }: ProblemP
       default: return 'bg-muted text-muted-foreground';
     }
   };
+
+  // Auto-scroll to test results when they appear
+  useEffect(() => {
+    if (testResults && testResults.length > 0 && testResultsRef.current) {
+      setTimeout(() => {
+        testResultsRef.current?.scrollIntoView({ 
+          behavior: 'smooth',
+          block: 'start'
+        });
+      }, 200);
+    }
+  }, [testResults]);
 
   return (
     <Card className="h-full bg-gradient-to-br from-card to-card/80 border-border/50 overflow-y-auto">
@@ -140,6 +155,7 @@ export const ProblemPanel = ({ problem, timeElapsed = 0, testResults }: ProblemP
         {/* Test Results */}
         {testResults && testResults.length > 0 && (
           <motion.div
+            ref={testResultsRef}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="border-t border-border/50 pt-6"
