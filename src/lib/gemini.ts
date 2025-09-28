@@ -3,7 +3,7 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 const API_KEY = "AIzaSyCn95C8eCn6pSzLQetRFprl6jx0LuZWQNg";
 
 export const genAI = new GoogleGenerativeAI(API_KEY);
-export const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+export const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
 export interface AnalysisResult {
   complexity: string;

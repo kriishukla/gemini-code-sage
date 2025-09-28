@@ -2,8 +2,9 @@ import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Send, Bot, User, Lightbulb } from 'lucide-react';
+import { Send, Bot, User, Lightbulb, Mic, MicOff, Square } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useAudioRecorder } from '@/hooks/useAudioRecorder';
 
 interface Message {
   id: string;
@@ -28,6 +29,21 @@ export const InterviewerChat = ({
 }: InterviewerChatProps) => {
   const [newMessage, setNewMessage] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Audio recording functionality
+  const audioRecorder = useAudioRecorder({
+    onTranscriptionStart: () => {
+      console.log('Transcription started...');
+    },
+    onTranscriptionComplete: (text: string) => {
+      console.log('Transcription completed:', text);
+      setNewMessage(text);
+    },
+    onTranscriptionError: (error: string) => {
+      console.error('Transcription error:', error);
+      // You might want to show a toast or alert here
+    }
+  });
 
   const scrollToBottom = () => {
     // Use setTimeout to ensure DOM updates are complete before scrolling
@@ -205,23 +221,75 @@ export const InterviewerChat = ({
       {/* Input */}
       <div className="flex-shrink-0 p-4 border-t border-border/50 bg-card/50">
         <div className="flex gap-2">
-          <Input
-            value={newMessage}
-            onChange={(e) => setNewMessage(e.target.value)}
-            onKeyPress={handleKeyPress}
-            placeholder="Ask questions, explain your approach, or request hints..."
-            className="flex-1"
-            disabled={isThinking}
-          />
+          <div className="flex-1 relative">
+            <Input
+              value={newMessage}
+              onChange={(e) => setNewMessage(e.target.value)}
+              onKeyPress={handleKeyPress}
+              placeholder={audioRecorder.isRecording 
+                ? "Recording audio..." 
+                : audioRecorder.isTranscribing 
+                  ? "Transcribing..." 
+                  : "Ask questions, explain your approach, or request hints..."}
+              className="flex-1 pr-12"
+              disabled={isThinking || audioRecorder.isRecording || audioRecorder.isTranscribing}
+            />
+            
+            {/* Recording duration indicator */}
+            {audioRecorder.isRecording && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center gap-2 text-red-500 text-sm"
+              >
+                <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+                {Math.floor(audioRecorder.duration / 60)}:{(audioRecorder.duration % 60).toString().padStart(2, '0')}
+              </motion.div>
+            )}
+          </div>
+          
+          {/* Microphone button */}
+          <Button
+            onClick={audioRecorder.isRecording ? audioRecorder.stopRecording : audioRecorder.startRecording}
+            disabled={isThinking || audioRecorder.isTranscribing}
+            size="sm"
+            variant={audioRecorder.isRecording ? "destructive" : "outline"}
+            className={audioRecorder.isRecording 
+              ? "bg-red-500 hover:bg-red-600" 
+              : "hover:bg-primary hover:text-primary-foreground"
+            }
+          >
+            {audioRecorder.isRecording ? (
+              <Square className="w-4 h-4" />
+            ) : audioRecorder.isTranscribing ? (
+              <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+            ) : (
+              <Mic className="w-4 h-4" />
+            )}
+          </Button>
+          
+          {/* Send button */}
           <Button
             onClick={handleSend}
-            disabled={!newMessage.trim() || isThinking}
+            disabled={!newMessage.trim() || isThinking || audioRecorder.isRecording || audioRecorder.isTranscribing}
             size="sm"
             className="bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70"
           >
             <Send className="w-4 h-4" />
           </Button>
         </div>
+        
+        {/* Audio recording status */}
+        {audioRecorder.isTranscribing && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mt-2 text-sm text-blue-600 flex items-center gap-2"
+          >
+            <div className="w-3 h-3 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+            Converting speech to text...
+          </motion.div>
+        )}
       </div>
     </div>
   );
