@@ -247,12 +247,6 @@ export const InterviewInterface = ({
         expectedOutput: '[]',
         actualOutput: '[]',
         passed: true
-      },
-      {
-        input: '[5, 5, 5, 5]',
-        expectedOutput: '[5]',
-        actualOutput: code.includes('set') || code.includes('dict') ? '[5]' : '[5, 5, 5]',
-        passed: code.includes('set') || code.includes('dict')
       }
     ];
     
