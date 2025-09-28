@@ -8,12 +8,32 @@ import { Badge } from '@/components/ui/badge';
 import { LogOut, User, Clock, Code2, Brain } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
+import { InterviewStatsService, InterviewSession } from '@/services/interviewStats';
 
 const CandidatePortal = () => {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   const [sessionDuration, setSessionDuration] = useState(0);
   const [showPerformanceSummary, setShowPerformanceSummary] = useState(false);
+  const [sessionId] = useState(() => InterviewStatsService.generateSessionId());
+  
+  // Track interview session data
+  const [sessionData, setSessionData] = useState({
+    codeExecutions: 0,
+    problemsAttempted: 1,
+    problemsSolved: 0,
+    testsPassed: 0,
+    testsTotal: 0,
+    aiInteractions: 0,
+    currentProblem: 'Find Duplicates',
+    submittedCode: '',
+    testResults: [] as Array<{
+      input: string;
+      expectedOutput: string;
+      actualOutput: string;
+      passed: boolean;
+    }>
+  });
 
   // Track session duration
   useEffect(() => {
@@ -34,6 +54,44 @@ const CandidatePortal = () => {
   };
 
   const handlePerformanceSummaryClose = () => {
+    // Save interview session data before logout
+    if (user) {
+      const session: InterviewSession = {
+        id: sessionId,
+        candidateEmail: user.email,
+        candidateName: user.email.split('@')[0], // Extract name from email
+        timestamp: new Date().toISOString(),
+        duration: sessionDuration,
+        startTime: user.loginTime,
+        endTime: new Date().toISOString(),
+        performance: {
+          overallScore: 41, // Static score as defined in PerformanceSummary
+          problemsAttempted: sessionData.problemsAttempted,
+          problemsSolved: sessionData.problemsSolved,
+          codeExecutions: sessionData.codeExecutions,
+          testsPassed: sessionData.testsPassed,
+          testsTotal: sessionData.testsTotal || 3, // Default to 3 test cases
+        },
+        problems: [{
+          title: sessionData.currentProblem,
+          difficulty: 'Medium',
+          timeSpent: sessionDuration,
+          solved: sessionData.problemsSolved > 0,
+          codeSubmitted: sessionData.submittedCode,
+          testResults: sessionData.testResults
+        }],
+        aiInteractions: sessionData.aiInteractions,
+        averageResponseTime: 26, // Static value as used in original summary
+        strengths: ['Problem comprehension', 'Code structure', 'Communication'],
+        improvements: ['Algorithm optimization', 'Edge case handling', 'Time complexity analysis'],
+        status: 'completed'
+      };
+
+      // Save the session
+      InterviewStatsService.saveSession(session);
+      console.log('Interview session saved:', session);
+    }
+
     setShowPerformanceSummary(false);
     logout();
     navigate('/');
@@ -121,7 +179,20 @@ const CandidatePortal = () => {
         >
           <Card className="overflow-hidden">
             <CardContent className="p-0">
-              <InterviewInterface />
+              <InterviewInterface 
+                onCodeRun={() => setSessionData(prev => ({ ...prev, codeExecutions: prev.codeExecutions + 1 }))}
+                onTestResults={(results) => {
+                  setSessionData(prev => ({
+                    ...prev,
+                    testResults: results,
+                    testsPassed: results.filter(r => r.passed).length,
+                    testsTotal: results.length,
+                    problemsSolved: results.every(r => r.passed) ? 1 : 0
+                  }));
+                }}
+                onCodeChange={(code) => setSessionData(prev => ({ ...prev, submittedCode: code }))}
+                onAIInteraction={() => setSessionData(prev => ({ ...prev, aiInteractions: prev.aiInteractions + 1 }))}
+              />
             </CardContent>
           </Card>
         </motion.div>

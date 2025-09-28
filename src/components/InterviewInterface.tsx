@@ -145,6 +145,18 @@ print(f"Water trapped: {result} units")`
 const SAMPLE_PROBLEM = PROBLEMS.FIND_DUPLICATES;
 const INITIAL_CODE = SAMPLE_PROBLEM.initialCode;
 
+interface InterviewInterfaceProps {
+  onCodeRun?: () => void;
+  onTestResults?: (results: Array<{
+    input: string;
+    expectedOutput: string;
+    actualOutput: string;
+    passed: boolean;
+  }>) => void;
+  onCodeChange?: (code: string) => void;
+  onAIInteraction?: () => void;
+}
+
 interface Message {
   id: string;
   role: 'user' | 'assistant';
@@ -153,9 +165,20 @@ interface Message {
   type?: 'hint' | 'analysis' | 'question';
 }
 
-export const InterviewInterface = () => {
+export const InterviewInterface = ({ 
+  onCodeRun, 
+  onTestResults, 
+  onCodeChange, 
+  onAIInteraction 
+}: InterviewInterfaceProps = {}) => {
   const [currentProblem, setCurrentProblem] = useState<keyof typeof PROBLEMS>('FIND_DUPLICATES');
   const [code, setCode] = useState(PROBLEMS.FIND_DUPLICATES.initialCode);
+  
+  // Wrapper for setCode to notify parent
+  const handleCodeChange = (newCode: string) => {
+    setCode(newCode);
+    onCodeChange?.(newCode);
+  };
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
@@ -197,6 +220,9 @@ export const InterviewInterface = () => {
   const handleRunCode = async () => {
     setIsRunning(true);
     
+    // Notify parent about code run
+    onCodeRun?.();
+    
     // Analyze code first
     try {
       const analysisResult = await analyzeCode(code, PROBLEMS[currentProblem].description);
@@ -232,6 +258,9 @@ export const InterviewInterface = () => {
     
     setTestResults(mockResults);
     setIsRunning(false);
+    
+    // Notify parent about test results
+    onTestResults?.(mockResults);
 
     // Show analysis popup
     setShowAnalysisPopup(true);
@@ -299,6 +328,11 @@ export const InterviewInterface = () => {
     };
 
     setMessages(prev => [...prev, newMessage]);
+    
+    // Notify parent about AI interaction
+    if (role === 'user') {
+      onAIInteraction?.();
+    }
 
     if (role === 'user') {
       setIsThinking(true);
@@ -401,7 +435,7 @@ export const InterviewInterface = () => {
               <div className="h-full overflow-hidden">
                 <CodeEditor
                   code={code}
-                  onChange={setCode}
+                  onChange={handleCodeChange}
                   onRun={handleRunCode}
                   onReset={handleResetCode}
                   onSubmit={handleSubmitProblem}

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,6 +8,8 @@ import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/contexts/AuthContext';
+import { InterviewHistory } from '@/components/InterviewHistory';
+import { InterviewStatsService } from '@/services/interviewStats';
 import {
   Users,
   TrendingUp,
@@ -109,6 +111,21 @@ const HiringManagerDashboard = () => {
   const navigate = useNavigate();
   const { logout } = useAuth();
   const [selectedTab, setSelectedTab] = useState('overview');
+  const [realStats, setRealStats] = useState({
+    totalSessions: 0,
+    completedSessions: 0,
+    abandonedSessions: 0,
+    averageScore: 0,
+    averageDuration: 0,
+    topCandidates: [] as any[],
+    recentSessions: [] as any[]
+  });
+
+  // Load real statistics on component mount
+  useEffect(() => {
+    const stats = InterviewStatsService.getSessionsSummary();
+    setRealStats(stats);
+  }, []);
 
   const handleLogout = () => {
     logout();
@@ -149,7 +166,7 @@ const HiringManagerDashboard = () => {
 
       <div className="p-6 max-w-7xl mx-auto">
         <Tabs value={selectedTab} onValueChange={setSelectedTab}>
-          <TabsList className="grid w-full grid-cols-3 mb-8">
+          <TabsList className="grid w-full grid-cols-4 mb-8">
             <TabsTrigger value="overview" className="flex items-center">
               <BarChart3 className="h-4 w-4 mr-2" />
               Overview
@@ -161,6 +178,10 @@ const HiringManagerDashboard = () => {
             <TabsTrigger value="analytics" className="flex items-center">
               <Activity className="h-4 w-4 mr-2" />
               Analytics
+            </TabsTrigger>
+            <TabsTrigger value="history" className="flex items-center">
+              <Clock className="h-4 w-4 mr-2" />
+              Interview History
             </TabsTrigger>
           </TabsList>
 
@@ -178,8 +199,8 @@ const HiringManagerDashboard = () => {
                     <Users className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold">{dashboardStats.totalCandidates}</div>
-                    <p className="text-xs text-muted-foreground">+12% from last month</p>
+                    <div className="text-2xl font-bold">{realStats.totalSessions}</div>
+                    <p className="text-xs text-muted-foreground">Total interview sessions</p>
                   </CardContent>
                 </Card>
               </motion.div>
@@ -191,12 +212,12 @@ const HiringManagerDashboard = () => {
               >
                 <Card>
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Active Interviews</CardTitle>
-                    <Clock className="h-4 w-4 text-muted-foreground" />
+                    <CardTitle className="text-sm font-medium">Completed Sessions</CardTitle>
+                    <CheckCircle className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold text-blue-600">{dashboardStats.activeInterviews}</div>
-                    <p className="text-xs text-muted-foreground">In progress now</p>
+                    <div className="text-2xl font-bold text-green-600">{realStats.completedSessions}</div>
+                    <p className="text-xs text-muted-foreground">Successfully finished</p>
                   </CardContent>
                 </Card>
               </motion.div>
@@ -208,12 +229,12 @@ const HiringManagerDashboard = () => {
               >
                 <Card>
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Completed Today</CardTitle>
-                    <CheckCircle className="h-4 w-4 text-muted-foreground" />
+                    <CardTitle className="text-sm font-medium">Average Score</CardTitle>
+                    <TrendingUp className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold text-green-600">{dashboardStats.completedToday}</div>
-                    <p className="text-xs text-muted-foreground">+3 from yesterday</p>
+                    <div className="text-2xl font-bold text-blue-600">{realStats.averageScore}%</div>
+                    <p className="text-xs text-muted-foreground">Overall performance</p>
                   </CardContent>
                 </Card>
               </motion.div>
@@ -225,12 +246,12 @@ const HiringManagerDashboard = () => {
               >
                 <Card>
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Average Score</CardTitle>
-                    <Star className="h-4 w-4 text-muted-foreground" />
+                    <CardTitle className="text-sm font-medium">Average Duration</CardTitle>
+                    <Clock className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold text-yellow-600">{dashboardStats.averageScore}/10</div>
-                    <p className="text-xs text-muted-foreground">+0.3 this week</p>
+                    <div className="text-2xl font-bold text-yellow-600">{Math.floor(realStats.averageDuration / 60)}m</div>
+                    <p className="text-xs text-muted-foreground">Time per session</p>
                   </CardContent>
                 </Card>
               </motion.div>
@@ -242,12 +263,12 @@ const HiringManagerDashboard = () => {
               >
                 <Card>
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Pass Rate</CardTitle>
-                    <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                    <CardTitle className="text-sm font-medium">Abandoned Sessions</CardTitle>
+                    <XCircle className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold text-purple-600">{dashboardStats.passRate}%</div>
-                    <p className="text-xs text-muted-foreground">+5% from last month</p>
+                    <div className="text-2xl font-bold text-red-600">{realStats.abandonedSessions}</div>
+                    <p className="text-xs text-muted-foreground">Incomplete sessions</p>
                   </CardContent>
                 </Card>
               </motion.div>
@@ -266,9 +287,9 @@ const HiringManagerDashboard = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {recentCandidates.slice(0, 3).map((candidate, index) => (
+                    {realStats.recentSessions.slice(0, 3).length > 0 ? realStats.recentSessions.slice(0, 3).map((session, index) => (
                       <motion.div
-                        key={candidate.id}
+                        key={session.id}
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: 0.7 + index * 0.1 }}
@@ -276,23 +297,29 @@ const HiringManagerDashboard = () => {
                       >
                         <div className="flex items-center space-x-4">
                           <Avatar>
-                            <AvatarImage src={candidate.avatar} />
-                            <AvatarFallback>{candidate.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+                            <AvatarFallback>{session.candidateName.split(' ').map((n: string) => n[0]).join('')}</AvatarFallback>
                           </Avatar>
                           <div>
-                            <p className="font-semibold">{candidate.name}</p>
-                            <p className="text-sm text-gray-600">{candidate.position}</p>
+                            <p className="font-semibold">{session.candidateName}</p>
+                            <p className="text-sm text-gray-600">{session.candidateEmail}</p>
                           </div>
                         </div>
                         <div className="text-right">
                           <div className="flex items-center space-x-2 mb-1">
                             <Star className="h-4 w-4 text-yellow-500" />
-                            <span className="font-semibold">{candidate.score}</span>
+                            <span className="font-semibold">{session.performance.overallScore}%</span>
                           </div>
-                          {getStatusBadge(candidate.status)}
+                          <Badge variant={session.status === 'completed' ? 'default' : 'secondary'}>
+                            {session.status}
+                          </Badge>
                         </div>
                       </motion.div>
-                    ))}
+                    )) : (
+                      <div className="text-center py-8 text-gray-500">
+                        <Activity className="h-8 w-8 mx-auto mb-2 text-gray-300" />
+                        <p className="text-sm">No recent sessions</p>
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -304,20 +331,20 @@ const HiringManagerDashboard = () => {
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <div>
-                    <CardTitle>All Candidates</CardTitle>
-                    <CardDescription>Manage and review candidate performances</CardDescription>
+                    <CardTitle>Recent Interview Sessions ({realStats.recentSessions.length})</CardTitle>
+                    <CardDescription>Latest candidate interview results</CardDescription>
                   </div>
                   <Button variant="outline" size="sm">
-                    <Filter className="h-4 w-4 mr-2" />
-                    Filter
+                    <Download className="h-4 w-4 mr-2" />
+                    Export Data
                   </Button>
                 </div>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {recentCandidates.map((candidate, index) => (
+                  {realStats.recentSessions.length > 0 ? realStats.recentSessions.map((session, index) => (
                     <motion.div
-                      key={candidate.id}
+                      key={session.id}
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: index * 0.1 }}
@@ -325,44 +352,48 @@ const HiringManagerDashboard = () => {
                     >
                       <div className="flex items-center space-x-4 flex-1">
                         <Avatar>
-                          <AvatarImage src={candidate.avatar} />
-                          <AvatarFallback>{candidate.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+                          <AvatarFallback>{session.candidateName.split(' ').map((n: string) => n[0]).join('')}</AvatarFallback>
                         </Avatar>
                         <div className="flex-1">
                           <div className="flex items-center justify-between mb-1">
-                            <p className="font-semibold">{candidate.name}</p>
+                            <p className="font-semibold">{session.candidateName}</p>
                             <div className="flex items-center space-x-2">
                               <Star className="h-4 w-4 text-yellow-500" />
-                              <span className="font-semibold">{candidate.score}</span>
+                              <span className="font-semibold">{session.performance.overallScore}%</span>
                             </div>
                           </div>
-                          <p className="text-sm text-gray-600 mb-2">{candidate.email} • {candidate.position}</p>
+                          <p className="text-sm text-gray-600 mb-2">{session.candidateEmail}</p>
                           <div className="flex items-center space-x-2 mb-2">
                             <Calendar className="h-4 w-4 text-gray-400" />
-                            <span className="text-sm text-gray-600">{candidate.date}</span>
+                            <span className="text-sm text-gray-600">{new Date(session.timestamp).toLocaleDateString()}</span>
                             <Clock className="h-4 w-4 text-gray-400 ml-4" />
-                            <span className="text-sm text-gray-600">{candidate.duration}</span>
+                            <span className="text-sm text-gray-600">{Math.floor(session.duration / 60)}m {session.duration % 60}s</span>
                           </div>
                           <div className="flex flex-wrap gap-1">
-                            {candidate.skills.map((skill) => (
-                              <Badge key={skill} variant="secondary" className="text-xs">
-                                {skill}
+                            {session.problems.map((problem, idx) => (
+                              <Badge key={idx} variant="secondary" className="text-xs">
+                                {problem.title}
                               </Badge>
                             ))}
                           </div>
                         </div>
                       </div>
                       <div className="flex items-center space-x-2 ml-4">
-                        {getStatusBadge(candidate.status)}
+                        <Badge variant={session.status === 'completed' ? 'default' : 'secondary'}>
+                          {session.status}
+                        </Badge>
                         <Button variant="ghost" size="sm">
                           <Eye className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="sm">
-                          <MessageSquare className="h-4 w-4" />
-                        </Button>
                       </div>
                     </motion.div>
-                  ))}
+                  )) : (
+                    <div className="text-center py-8 text-gray-500">
+                      <Users className="h-12 w-12 mx-auto mb-3 text-gray-300" />
+                      <p>No interview sessions yet</p>
+                      <p className="text-sm">Sessions will appear here after candidates complete interviews</p>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -372,61 +403,99 @@ const HiringManagerDashboard = () => {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <Card>
                 <CardHeader>
-                  <CardTitle>Skills Performance</CardTitle>
-                  <CardDescription>Average scores by technology</CardDescription>
+                  <CardTitle>Session Statistics</CardTitle>
+                  <CardDescription>Overview of interview performance</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-4">
-                    {skillsAnalytics.map((skill, index) => (
-                      <motion.div
-                        key={skill.skill}
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: index * 0.1 }}
-                        className="space-y-2"
-                      >
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="font-medium">{skill.skill}</p>
-                            <p className="text-sm text-gray-600">{skill.candidates} candidates</p>
-                          </div>
-                          <div className="text-right">
-                            <p className="font-semibold">{skill.avgScore}/10</p>
-                          </div>
-                        </div>
-                        <Progress value={skill.avgScore * 10} className="h-2" />
-                      </motion.div>
-                    ))}
+                  <div className="space-y-6">
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span>Completion Rate</span>
+                        <span className="font-semibold">
+                          {realStats.totalSessions > 0 
+                            ? Math.round((realStats.completedSessions / realStats.totalSessions) * 100)
+                            : 0}%
+                        </span>
+                      </div>
+                      <Progress 
+                        value={realStats.totalSessions > 0 
+                          ? (realStats.completedSessions / realStats.totalSessions) * 100 
+                          : 0} 
+                        className="h-2" 
+                      />
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="text-center p-4 bg-green-50 rounded-lg">
+                        <div className="text-2xl font-bold text-green-600">{realStats.completedSessions}</div>
+                        <div className="text-sm text-green-700">Completed</div>
+                      </div>
+                      <div className="text-center p-4 bg-red-50 rounded-lg">
+                        <div className="text-2xl font-bold text-red-600">{realStats.abandonedSessions}</div>
+                        <div className="text-sm text-red-700">Abandoned</div>
+                      </div>
+                    </div>
+                    
+                    <div className="pt-4 border-t">
+                      <div className="flex justify-between items-center mb-2">
+                        <span>Average Score</span>
+                        <span className="font-semibold">{realStats.averageScore}%</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span>Average Duration</span>
+                        <span className="font-semibold">{Math.floor(realStats.averageDuration / 60)}m {realStats.averageDuration % 60}s</span>
+                      </div>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
 
               <Card>
                 <CardHeader>
-                  <CardTitle>Interview Insights</CardTitle>
-                  <CardDescription>Key metrics and trends</CardDescription>
+                  <CardTitle>Top Performers</CardTitle>
+                  <CardDescription>Highest scoring candidates</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-6">
-                    <div>
-                      <p className="text-sm font-medium text-gray-700 mb-2">Average Interview Duration</p>
-                      <p className="text-2xl font-bold text-blue-600">42 minutes</p>
-                      <p className="text-sm text-gray-500">3 min faster than last month</p>
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-700 mb-2">Completion Rate</p>
-                      <p className="text-2xl font-bold text-green-600">92%</p>
-                      <Progress value={92} className="h-2 mt-2" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-700 mb-2">AI Accuracy Score</p>
-                      <p className="text-2xl font-bold text-purple-600">96.5%</p>
-                      <p className="text-sm text-gray-500">Gemini AI assessment accuracy</p>
-                    </div>
+                  <div className="space-y-4">
+                    {realStats.topCandidates.length > 0 ? (
+                      realStats.topCandidates.map((candidate, index) => (
+                        <motion.div
+                          key={candidate.id}
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: index * 0.1 }}
+                          className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                        >
+                          <div className="flex items-center space-x-3">
+                            <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-sm font-medium text-blue-600">
+                              {index + 1}
+                            </div>
+                            <div>
+                              <p className="font-medium">{candidate.candidateName}</p>
+                              <p className="text-sm text-gray-600">{candidate.candidateEmail}</p>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <p className="font-semibold text-green-600">{candidate.performance.overallScore}%</p>
+                            <p className="text-xs text-gray-500">{Math.floor(candidate.duration / 60)}m</p>
+                          </div>
+                        </motion.div>
+                      ))
+                    ) : (
+                      <div className="text-center py-8 text-gray-500">
+                        <Activity className="h-12 w-12 mx-auto mb-3 text-gray-300" />
+                        <p>No interview data yet</p>
+                        <p className="text-sm">Complete some interviews to see analytics</p>
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>
             </div>
+          </TabsContent>
+
+          <TabsContent value="history">
+            <InterviewHistory />
           </TabsContent>
         </Tabs>
       </div>
