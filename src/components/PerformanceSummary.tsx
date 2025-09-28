@@ -4,16 +4,11 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { 
-  Clock, 
   Trophy, 
-  Target, 
   TrendingUp, 
   CheckCircle, 
   XCircle, 
-  Star,
-  Code,
-  MessageSquare,
-  Brain
+  Star
 } from 'lucide-react';
 
 interface PerformanceSummaryProps {
@@ -27,15 +22,9 @@ interface PerformanceSummaryProps {
 }
 
 export const PerformanceSummary = ({ isOpen, onClose, sessionData }: PerformanceSummaryProps) => {
-  // Mock performance data - in a real app, this would come from actual session tracking
+  // Static performance data for consistent display
   const performanceData = {
-    sessionDuration: sessionData.duration,
-    problemsAttempted: 1,
-    problemsSolved: 0,
-    codeExecutions: Math.floor(sessionData.duration / 120) + Math.floor(Math.random() * 3), // Mock based on time
-    chatInteractions: Math.floor(sessionData.duration / 60) + Math.floor(Math.random() * 5), // Mock based on time
-    averageResponseTime: Math.floor(Math.random() * 30) + 15, // Mock: 15-45 seconds
-    overallScore: Math.floor(Math.random() * 40) + 30, // Mock: 30-70%
+    overallScore: 41, // Static: 41%
     strengths: ['Problem comprehension', 'Code structure', 'Communication'],
     improvements: ['Algorithm optimization', 'Edge case handling', 'Time complexity analysis']
   };
@@ -95,95 +84,9 @@ export const PerformanceSummary = ({ isOpen, onClose, sessionData }: Performance
             <p className="text-gray-600 mt-2">Overall Performance Score</p>
           </motion.div>
 
-          {/* Session Stats */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="text-center p-4 bg-white rounded-lg border"
-            >
-              <Clock className="w-6 h-6 text-blue-500 mx-auto mb-2" />
-              <div className="text-2xl font-bold text-gray-900">
-                {formatDuration(performanceData.sessionDuration)}
-              </div>
-              <p className="text-sm text-gray-600">Session Time</p>
-            </motion.div>
 
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-              className="text-center p-4 bg-white rounded-lg border"
-            >
-              <Code className="w-6 h-6 text-green-500 mx-auto mb-2" />
-              <div className="text-2xl font-bold text-gray-900">
-                {performanceData.codeExecutions}
-              </div>
-              <p className="text-sm text-gray-600">Code Runs</p>
-            </motion.div>
 
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4 }}
-              className="text-center p-4 bg-white rounded-lg border"
-            >
-              <MessageSquare className="w-6 h-6 text-purple-500 mx-auto mb-2" />
-              <div className="text-2xl font-bold text-gray-900">
-                {performanceData.chatInteractions}
-              </div>
-              <p className="text-sm text-gray-600">AI Interactions</p>
-            </motion.div>
 
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5 }}
-              className="text-center p-4 bg-white rounded-lg border"
-            >
-              <Brain className="w-6 h-6 text-orange-500 mx-auto mb-2" />
-              <div className="text-2xl font-bold text-gray-900">
-                {performanceData.averageResponseTime}s
-              </div>
-              <p className="text-sm text-gray-600">Avg Response</p>
-            </motion.div>
-          </div>
-
-          {/* Problem Solving */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.6 }}
-            className="p-4 bg-white rounded-lg border"
-          >
-            <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
-              <Target className="w-5 h-5 text-blue-500" />
-              Problem Solving
-            </h3>
-            <div className="space-y-3">
-              <div className="flex justify-between items-center">
-                <span>Problems Attempted</span>
-                <span className="font-semibold">{performanceData.problemsAttempted}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span>Problems Solved</span>
-                <span className="font-semibold text-green-600">{performanceData.problemsSolved}</span>
-              </div>
-              <div className="mt-2">
-                <div className="flex justify-between mb-1">
-                  <span className="text-sm text-gray-600">Completion Rate</span>
-                  <span className="text-sm text-gray-600">
-                    {Math.round((performanceData.problemsSolved / performanceData.problemsAttempted) * 100)}%
-                  </span>
-                </div>
-                <Progress 
-                  value={(performanceData.problemsSolved / performanceData.problemsAttempted) * 100} 
-                  className="h-2"
-                />
-              </div>
-            </div>
-          </motion.div>
 
           {/* Strengths and Areas for Improvement */}
           <div className="grid md:grid-cols-2 gap-4">
@@ -220,7 +123,7 @@ export const PerformanceSummary = ({ isOpen, onClose, sessionData }: Performance
               <ul className="space-y-2">
                 {performanceData.improvements.map((improvement, index) => (
                   <li key={index} className="flex items-center gap-2 text-yellow-700">
-                    <Target className="w-4 h-4" />
+                    <TrendingUp className="w-4 h-4" />
                     {improvement}
                   </li>
                 ))}
